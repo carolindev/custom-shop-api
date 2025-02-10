@@ -1,0 +1,31 @@
+{{!
+ If this is a map and items are nullable, make sure that nulls are included.
+ To determine what JsonInclude.Include method to use, consider the following:
+ * If the field is required, always include it, even if it is null.
+ * Else use custom behavior, i.e., use whatever is defined on the object mapper.
+}}
+
+{{#vendorExtensions.x-JsonSerialize}}
+  @com.fasterxml.jackson.databind.annotation.JsonSerialize(using = {{vendorExtensions.x-JsonSerialize}}.class)
+{{/vendorExtensions.x-JsonSerialize}}
+
+{{#vendorExtensions.x-JsonDeserialize}}
+  @com.fasterxml.jackson.databind.annotation.JsonDeserialize(using = {{vendorExtensions.x-JsonDeserialize}}.class)
+{{/vendorExtensions.x-JsonDeserialize}}
+
+@JsonProperty("{{baseName}}")
+@JsonInclude(value = JsonInclude.Include.{{#required}}ALWAYS{{/required}}{{^required}}NON_NULL{{/required}})
+
+{{#withXml}}
+  {{^isContainer}}
+  @JacksonXmlProperty({{#isXmlAttribute}}isAttribute = true, {{/isXmlAttribute}}{{#xmlNamespace}}namespace="{{xmlNamespace}}", {{/xmlNamespace}}localName = "{{#xmlName}}{{xmlName}}{{/xmlName}}{{^xmlName}}{{baseName}}{{/xmlName}}")
+  {{/isContainer}}
+  {{#isContainer}}
+    {{#isXmlWrapped}}
+  @JacksonXmlElementWrapper(useWrapping = true, {{#xmlNamespace}}namespace="{{xmlNamespace}}", {{/xmlNamespace}}localName = "{{#items.xmlName}}{{items.xmlName}}{{/items.xmlName}}{{^items.xmlName}}{{items.baseName}}{{/items.xmlName}}")
+    {{/isXmlWrapped}}
+    {{^isXmlWrapped}}
+  @JacksonXmlElementWrapper(useWrapping = false)
+    {{/isXmlWrapped}}
+  {{/isContainer}}
+{{/withXml}}

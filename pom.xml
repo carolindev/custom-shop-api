@@ -64,12 +64,68 @@
       <scope>provided</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.11.4</version>
+      <scope>test</scope>
+    </dependency>
+
     <!-- Spring Boot Starter Test -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>io.swagger.core.v3</groupId>
+      <artifactId>swagger-annotations</artifactId>
+      <version>2.2.10</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.openapitools</groupId>
+      <artifactId>jackson-databind-nullable</artifactId>
+      <version>0.2.2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+      <version>3.0.2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hibernate.validator</groupId>
+      <artifactId>hibernate-validator</artifactId>
+      <version>8.0.1.Final</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.8.4</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-xml</artifactId>
+      <version>2.16.1</version> <!-- Latest stable version -->
+    </dependency>
+
+    <dependency>
+      <groupId>io.github.threeten-jaxb</groupId>
+      <artifactId>threeten-jaxb-core</artifactId>
+      <version>2.2.0</version>
+    </dependency>
+
   </dependencies>
 
   <build>
@@ -78,7 +134,14 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
-        <version>${spring.boot.version}</version>
+        <version>3.4.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>repackage</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
       <!-- Compiler Plugin to use Java 17 -->
@@ -108,6 +171,101 @@
           <configLocation>${project.basedir}/checkstyle.xml</configLocation>
           <consoleOutput>true</consoleOutput>
           <failOnViolation>true</failOnViolation>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.openapitools</groupId>
+        <artifactId>openapi-generator-maven-plugin</artifactId>
+        <version>7.11.0</version>
+        <configuration>
+          <!-- Specify OpenAPI spec file -->
+          <inputSpec>${project.basedir}/openapi/custom-shop-api.yaml</inputSpec>
+
+          <!-- Use Spring Boot for server-side API generation -->
+          <generatorName>spring</generatorName>
+          <library>spring-boot</library>
+
+          <!-- Common generation settings -->
+          <strictSpec>true</strictSpec>
+          <enablePostProcessFile>false</enablePostProcessFile>
+
+          <!-- Control what is generated -->
+          <generateApis>true</generateApis>
+          <generateModels>true</generateModels>
+          <generateSupportingFiles>true</generateSupportingFiles>
+          <generateApiTests>false</generateApiTests>
+          <generateModelTests>false</generateModelTests>
+          <generateModelDocumentation>false</generateModelDocumentation>
+
+          <!-- Package configuration -->
+          <apiPackage>com.carol.customshop.api</apiPackage>
+          <modelPackage>com.carol.customshop.dto</modelPackage>
+
+          <!-- Java-specific options -->
+          <configOptions>
+            <dateLibrary>java17</dateLibrary>
+            <useBeanValidation>true</useBeanValidation>
+            <performBeanValidation>true</performBeanValidation>
+            <useTags>true</useTags>
+            <interfaceOnly>true</interfaceOnly>
+            <skipDefaultInterface>true</skipDefaultInterface>
+            <booleanGetterPrefix>is</booleanGetterPrefix>
+            <hideGenerationTimestamp>true</hideGenerationTimestamp>
+            <useJakartaEe>true</useJakartaEe>
+            <useSpringAnnotations>true</useSpringAnnotations>
+            <withXml>true</withXml>
+            <serializableModel>true</serializableModel>
+          </configOptions>
+        </configuration>
+
+        <executions>
+          <execution>
+            <id>generate-custom-shop-api</id>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.1.2</version>
+        <configuration>
+          <includes>
+            <include>**/*Test.java</include>
+            <include>**/*Tests.java</include>
+            <include>**/Test*.java</include>
+          </includes>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>3.1.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.4.2</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>com.carol.customshop.CustomShopApiApplication</mainClass>
+            </manifest>
+          </archive>
         </configuration>
       </plugin>
 
