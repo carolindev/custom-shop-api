@@ -28,39 +28,39 @@ class AdminProductTypeControllerTest {
     @Mock
     private ProductTypeService productTypeService;
 
-    private String fullyCustomisableProductTypeId;
-    private String notCustomisableProductTypeId;
+    private String fullyCustomizableProductTypeId;
+    private String notCustomizableProductTypeId;
 
     /**
-     * Setup method to create fully customisable and non-customisable product types before each test.
+     * Setup method to create fully customizable and non-customizable product types before each test.
      */
     @BeforeEach
     void setUp(TestInfo testInfo) {
-        if (testInfo.getDisplayName().equals("shouldAddAttributesToFullyCustomisableProductType")) {
-            // Fully customisable product type
-            ProductTypeRequestConfig fullyCustomisableConfig = new ProductTypeRequestConfig("fully_customisable");
-            ProductTypeRequest fullyCustomisableRequest = new ProductTypeRequest("Bicycle", fullyCustomisableConfig);
+        if (testInfo.getDisplayName().equals("shouldAddAttributesToFullyCustomizableProductType")) {
+            // Fully customizable product type
+            ProductTypeRequestConfig fullyCustomizableConfig = new ProductTypeRequestConfig("fully_customizable");
+            ProductTypeRequest fullyCustomizableRequest = new ProductTypeRequest("Bicycle", fullyCustomizableConfig);
 
-            UUID fullyCustomisableUUID = UUID.randomUUID();
-            fullyCustomisableProductTypeId = fullyCustomisableUUID.toString();
-            when(productTypeService.createProductType(fullyCustomisableRequest)).thenReturn(fullyCustomisableUUID);
+            UUID fullyCustomizableUUID = UUID.randomUUID();
+            fullyCustomizableProductTypeId = fullyCustomizableUUID.toString();
+            when(productTypeService.createProductType(fullyCustomizableRequest)).thenReturn(fullyCustomizableUUID);
         }
 
-        if (testInfo.getDisplayName().equals("shouldFailToAddAttributesIfNotFullyCustomisable")) {
-            // Not customisable product type
-            ProductTypeRequestConfig notCustomisableConfig = new ProductTypeRequestConfig("not_customisable");
-            ProductTypeRequest notCustomisableRequest = new ProductTypeRequest("Snowboard", notCustomisableConfig);
+        if (testInfo.getDisplayName().equals("shouldFailToAddAttributesIfNotFullyCustomizable")) {
+            // Not customizable product type
+            ProductTypeRequestConfig notCustomizableConfig = new ProductTypeRequestConfig("not_customizable");
+            ProductTypeRequest notCustomizableRequest = new ProductTypeRequest("Snowboard", notCustomizableConfig);
 
-            UUID notCustomisableUUID = UUID.randomUUID();
-            notCustomisableProductTypeId = notCustomisableUUID.toString();
-            when(productTypeService.createProductType(notCustomisableRequest)).thenReturn(notCustomisableUUID);
+            UUID notCustomizableUUID = UUID.randomUUID();
+            notCustomizableProductTypeId = notCustomizableUUID.toString();
+            when(productTypeService.createProductType(notCustomizableRequest)).thenReturn(notCustomizableUUID);
         }
     }
 
     @Test
     void createProductType_HappyPath() {
         // Given: A Bicycle product type request
-        ProductTypeRequestConfig config = new ProductTypeRequestConfig("fully_customisable");
+        ProductTypeRequestConfig config = new ProductTypeRequestConfig("fully_customizable");
         ProductTypeRequest request = new ProductTypeRequest("Bicycle", config);
 
         UUID mockProductTypeId = UUID.randomUUID();
@@ -81,10 +81,10 @@ class AdminProductTypeControllerTest {
 
     @Test
     @Tag("needsSetup")
-    void shouldAddAttributesToFullyCustomisableProductType() {
-        // Given: A fully customisable product type
+    void shouldAddAttributesToFullyCustomizableProductType() {
+        // Given: A fully customizable product type
         AddAttributesRequest request = new AddAttributesRequest(
-                fullyCustomisableProductTypeId,
+                fullyCustomizableProductTypeId,
                 List.of(
                         new AttributeRequest("Frame Finish", List.of("Matte", "Shiny")),
                         new AttributeRequest("Wheels", List.of("Road Wheels", "Cruiser Wheels"))
@@ -108,17 +108,17 @@ class AdminProductTypeControllerTest {
 
     @Test
     @Tag("needsSetup")
-    void shouldFailToAddAttributesIfNotFullyCustomisable() {
-        // Given: A non-customisable product type
+    void shouldFailToAddAttributesIfNotFullyCustomizable() {
+        // Given: A non-customizable product type
         AddAttributesRequest request = new AddAttributesRequest(
-                notCustomisableProductTypeId,
+                notCustomizableProductTypeId,
                 List.of(
                         new AttributeRequest("Some Attr", List.of("Value1", "Value2"))
                 )
         );
 
         // Mock service to throw an exception when attempting to add attributes
-        doThrow(new IllegalStateException("Cannot add attributes to a non-fully-customisable product type."))
+        doThrow(new IllegalStateException("Cannot add attributes to a non-fully-customizable product type."))
                 .when(productTypeService).addAttributesToProductType(request);
 
         // When: calling the controller method
@@ -127,7 +127,7 @@ class AdminProductTypeControllerTest {
         // Then: verify response
         assertEquals(400, response.getStatusCodeValue());
         assertNotNull(response.getBody());
-        assertEquals("Cannot add attributes to a non-fully-customisable product type.", response.getBody().getError());
+        assertEquals("Cannot add attributes to a non-fully-customizable product type.", response.getBody().getError());
 
         // Verify that the service method was called exactly once
         verify(productTypeService, times(1)).addAttributesToProductType(request);

@@ -22,9 +22,12 @@ public class ProductType {
 
     private String name;
 
+    @Embedded
+    private ProductTypeConfig config;
+
     @OneToMany(mappedBy = "productType", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProductTypeAttribute> attributes = new ArrayList<>();
 
-    @Embedded
-    private ProductTypeConfig config;
+    @OneToMany(mappedBy = "productType", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<NotAllowedCombination> notAllowedCombinations = new ArrayList<>();
 }

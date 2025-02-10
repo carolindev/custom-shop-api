@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductTypeConfig {
-    private String customisation;  // e.g., "fully_customisable"
+    private String customisation;  // e.g., "fully_customizable"
    // private String paymentType;    // e.g., "one_time_payment", "subscription"
 }

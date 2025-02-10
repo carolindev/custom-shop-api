@@ -45,7 +45,7 @@ paths:
       summary: Add attributes to an existing product type
       description: >
         Adds one or more attributes (with possible options) to an existing product type. 
-        Only allowed if the product type is fully customisable.
+        Only allowed if the product type is fully customizable.
       operationId: addAttributesToProductType
       tags:
         - Admin - Product Types
@@ -67,7 +67,43 @@ paths:
                     type: string
                     example: "Attributes added successfully"
         "400":
-          description: Bad request - Cannot add attributes to a non-fully-customisable product type or invalid data
+          description: Bad request - Cannot add attributes to a non-fully-customizable product type or invalid data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /admin/product-types/not-allowed-combinations:
+    post:
+      summary: Add not allowed combinations to a product type
+      description: >
+        Defines not allowed attribute-option combinations for a customizable product type. 
+        Only applicable if the product type is fully customizable.
+      operationId: addNotAllowedCombinations
+      tags:
+        - Admin - Product Types
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotAllowedCombinationsRequest"
+      responses:
+        "200":
+          description: Not allowed combinations added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Not allowed combinations added successfully"
+        "400":
+          description: Bad request - Cannot add restrictions to a non-customizable product type or invalid data
           content:
             application/json:
               schema:
@@ -101,7 +137,7 @@ components:
       properties:
         customisation:
           type: string
-          example: "fullyCustomisable"
+          example: "fullyCustomizable"
 
     AddAttributesRequest:
       type: object
@@ -173,6 +209,52 @@ components:
           items:
             type: string
           example: ["Full-suspension", "Diamond", "Step-through"]
+
+    NotAllowedCombinationsRequest:
+      type: object
+      required:
+        - productTypeId
+        - notAllowedCombinations
+      properties:
+        productTypeId:
+          type: string
+          example: 1
+        notAllowedCombinations:
+          type: array
+          minItems: 1
+          items:
+            type: array
+            minItems: 2
+            items:
+              $ref: "#/components/schemas/NotAllowedCombinationItem"
+      example:
+        productTypeId: 1
+        notAllowedCombinations:
+          - - attributeId: 101
+              attributeOptionId: 1001
+            - attributeId: 102
+              attributeOptionId: 2002
+          - - attributeId: 103
+              attributeOptionId: 3003
+            - attributeId: 104
+              attributeOptionId: 4004
+            - attributeId: 105
+              attributeOptionId: 5005
+
+    NotAllowedCombinationItem:
+      type: object
+      required:
+        - attributeId
+        - attributeOptionId
+      properties:
+        attributeId:
+          type: integer
+          format: int64
+          example: 101
+        attributeOptionId:
+          type: integer
+          format: int64
+          example: 1001
 
     ErrorResponse:
       type: object

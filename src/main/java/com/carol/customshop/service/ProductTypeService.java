@@ -1,6 +1,7 @@
 package com.carol.customshop.service;
 
 import com.carol.customshop.dto.AddAttributesRequest;
+import com.carol.customshop.dto.NotAllowedCombinationsRequest;
 import com.carol.customshop.dto.ProductTypeRequest;
 import com.carol.customshop.entity.ProductType;
 import com.carol.customshop.repository.ProductTypeRepository;
@@ -42,11 +43,28 @@ public class ProductTypeService {
         // Get the customization type from the Product Type configuration
         String customisation = pType.getConfig().getCustomisation();
 
-        // Retrieve the correct service implementation based on the customization strategy
+        // Retrieve the correct service implementation based on the customization product type
         IProductTypeService specificProductTypeService = productTypeServiceFactory.getService(customisation);
 
         // Delegate the operation to the appropriate Product Type service
         return specificProductTypeService.addAttributesToProductType(addAttributesRequest.getProductTypeID(),
                 addAttributesRequest.getAttributes());
+    }
+
+    @Transactional
+    public void addNotAllowedCombinations(NotAllowedCombinationsRequest request) {
+        ProductType productType = productTypeRepository.findById(UUID.fromString(request.getProductTypeId()))
+                .orElseThrow(() -> new RuntimeException("No ProductType found with id=" + request.getProductTypeId()));
+
+        String customisation = productType.getConfig().getCustomisation();
+
+        // Retrieve the correct service implementation based on the customization strategy
+        IProductTypeService specificProductTypeService = productTypeServiceFactory.getService(customisation);
+
+        // Delegate the operation to the appropriate Product Type service
+        specificProductTypeService.addNotAllowedCombinations(
+                request.getProductTypeId(),
+                request.getNotAllowedCombinations()
+        );
     }
 }

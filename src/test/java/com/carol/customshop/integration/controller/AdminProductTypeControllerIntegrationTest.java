@@ -40,30 +40,30 @@ class AdminProductTypeControllerIntegrationTest {
     @Autowired
     private ProductTypeRepository productTypeRepository;
 
-    private String fullyCustomisableProductTypeId;
-    private String notCustomisableProductTypeId;
+    private String fullyCustomizableProductTypeId;
+    private String notCustomizableProductTypeId;
 
     @BeforeEach
     void setUp() {
-        // Create Fully Customisable Product Type
-        ProductType fullyCustomisableProductType = new ProductType();
-        fullyCustomisableProductType.setName("Bicycle");
-        fullyCustomisableProductType.setConfig(new ProductTypeConfig("fully_customisable"));
-        fullyCustomisableProductType = productTypeRepository.save(fullyCustomisableProductType);
-        fullyCustomisableProductTypeId = String.valueOf(fullyCustomisableProductType.getId());
+        // Create Fully Customizable Product Type
+        ProductType fullyCustomizableProductType = new ProductType();
+        fullyCustomizableProductType.setName("Bicycle");
+        fullyCustomizableProductType.setConfig(new ProductTypeConfig("fully_customizable"));
+        fullyCustomizableProductType = productTypeRepository.save(fullyCustomizableProductType);
+        fullyCustomizableProductTypeId = String.valueOf(fullyCustomizableProductType.getId());
 
-        // Create Not Customisable Product Type
-        ProductType notCustomisableProductType = new ProductType();
-        notCustomisableProductType.setName("Snowboard");
-        notCustomisableProductType.setConfig(new ProductTypeConfig("not_customisable"));
-        notCustomisableProductType = productTypeRepository.save(notCustomisableProductType);
-        notCustomisableProductTypeId = String.valueOf(notCustomisableProductType.getId());
+        // Create Not Customizable Product Type
+        ProductType notCustomizableProductType = new ProductType();
+        notCustomizableProductType.setName("Snowboard");
+        notCustomizableProductType.setConfig(new ProductTypeConfig("not_customizable"));
+        notCustomizableProductType = productTypeRepository.save(notCustomizableProductType);
+        notCustomizableProductTypeId = String.valueOf(notCustomizableProductType.getId());
     }
 
     @Test
     void shouldCreateProductTypeSuccessfully() throws Exception {
         // Given: A product type request that includes `name` and an embedded config with `customisation`.
-        ProductTypeRequestConfig config = new ProductTypeRequestConfig("fully_customisable");
+        ProductTypeRequestConfig config = new ProductTypeRequestConfig("fully_customizable");
         ProductTypeRequest request = new ProductTypeRequest("Bicycle", config);
 
         // When: Sending a POST request to create a ProductType
@@ -78,9 +78,9 @@ class AdminProductTypeControllerIntegrationTest {
     }
 
    @Test
-    void shouldAddAttributesToFullyCustomisableProductType() throws Exception {
+    void shouldAddAttributesToFullyCustomizableProductType() throws Exception {
         AddAttributesRequest addRequest = new AddAttributesRequest(
-                fullyCustomisableProductTypeId,
+                fullyCustomizableProductTypeId,
                 List.of(
                         new AttributeRequest("Frame Finish", List.of("Matte", "Shiny")),
                         new AttributeRequest("Wheels", List.of("Road Wheels", "Cruiser Wheels"))
@@ -95,9 +95,9 @@ class AdminProductTypeControllerIntegrationTest {
     }
 
     @Test
-    void shouldFailToAddAttributesIfNotFullyCustomisable() throws Exception {
+    void shouldFailToAddAttributesIfNotFullyCustomizable() throws Exception {
         AddAttributesRequest addRequest = new AddAttributesRequest(
-                notCustomisableProductTypeId,
+                notCustomizableProductTypeId,
                 List.of(
                         new AttributeRequest("Some Attr", List.of("Value1", "Value2"))
                 )
@@ -107,6 +107,6 @@ class AdminProductTypeControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(addRequest)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Cannot add attributes to a non-fully-customisable product type."));
+                .andExpect(jsonPath("$.error").value("Cannot add attributes to a non-fully-customizable product type."));
     }
 }
