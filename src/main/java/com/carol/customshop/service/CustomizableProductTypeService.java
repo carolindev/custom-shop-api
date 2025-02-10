@@ -3,6 +3,9 @@ package com.carol.customshop.service;
 import com.carol.customshop.dto.AttributeRequest;
 import com.carol.customshop.dto.NotAllowedCombinationItem;
 import com.carol.customshop.entity.*;
+import com.carol.customshop.repository.NotAllowedCombinationRepository;
+import com.carol.customshop.repository.ProductTypeAttributeOptionRepository;
+import com.carol.customshop.repository.ProductTypeAttributeRepository;
 import com.carol.customshop.repository.ProductTypeRepository;
 import com.carol.customshop.service.interfaces.IProductTypeService;
 import jakarta.persistence.EntityNotFoundException;
@@ -18,9 +21,23 @@ public class CustomizableProductTypeService implements IProductTypeService {
 
     private final ProductTypeRepository productTypeRepository;
 
+    private final NotAllowedCombinationRepository notAllowedCombinationRepository;
+
+    private final ProductTypeAttributeRepository productTypeAttributeRepository;
+
+    private final ProductTypeAttributeOptionRepository productTypeAttributeOptionRepository;
+
     // Use constructor injection
-    public CustomizableProductTypeService(ProductTypeRepository productTypeRepository) {
+    public CustomizableProductTypeService(
+            ProductTypeRepository productTypeRepository,
+            NotAllowedCombinationRepository notAllowedCombinationRepository,
+            ProductTypeAttributeRepository productTypeAttributeRepository,
+            ProductTypeAttributeOptionRepository productTypeAttributeOptionRepository
+    ) {
         this.productTypeRepository = productTypeRepository;
+        this.notAllowedCombinationRepository = notAllowedCombinationRepository;
+        this.productTypeAttributeRepository = productTypeAttributeRepository;
+        this.productTypeAttributeOptionRepository = productTypeAttributeOptionRepository;
     }
     @Override
     public boolean addAttributesToProductType(String productTypeID, List<AttributeRequest> attributes) {
@@ -61,7 +78,6 @@ public class CustomizableProductTypeService implements IProductTypeService {
     public void
         addNotAllowedCombinations(String productTypeId, List<List<NotAllowedCombinationItem>> notAllowedCombinations) {
 
-        UUID productTypeUUID = UUID.fromString(productTypeId);
         ProductType productType = productTypeRepository.findById(UUID.fromString(productTypeId))
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Product type not found.")
@@ -82,21 +98,46 @@ public class CustomizableProductTypeService implements IProductTypeService {
             }
         }
 
-        // Convert the List<List<NotAllowedCombinationItem>> into entities
         List<NotAllowedCombination> combinations = notAllowedCombinations.stream()
                 .map(combination -> {
-                    NotAllowedCombination notAllowedCombination = new NotAllowedCombination();
-                    notAllowedCombination.setProductType(productType);
-                    notAllowedCombination.setOptions(
-                            combination.stream().map(option -> {
+
+                    // Create and persist the parent first
+                    NotAllowedCombination parentCombination = new NotAllowedCombination();
+                    parentCombination.setProductType(productType);
+
+                    // Create and link child options
+                    NotAllowedCombination finalParentCombination = parentCombination;
+
+                    List<NotAllowedCombinationOption> options = combination.stream()
+                            .map(option -> {
                                 NotAllowedCombinationOption notAllowedCombinationOption =
                                         new NotAllowedCombinationOption();
-                                notAllowedCombinationOption.setAttributeId(option.getAttributeId());
-                                notAllowedCombinationOption.setAttributeOptionId(option.getAttributeOptionId());
+
+                                ProductTypeAttribute attribute = productTypeAttributeRepository
+                                        .findById(option.getAttributeId())
+                                        .orElseThrow(() ->
+                                                new IllegalArgumentException(
+                                                        "Attribute not found with ID: " + option.getAttributeId())
+                                        );
+
+                                ProductTypeAttributeOption attributeOption = productTypeAttributeOptionRepository
+                                        .findById(option.getAttributeOptionId())
+                                        .orElseThrow(() -> new IllegalArgumentException(
+                                                "Attribute option not found with ID: " + option.getAttributeOptionId())
+                                        );
+
+                                notAllowedCombinationOption.setAttribute(attribute);
+                                notAllowedCombinationOption.setAttributeOption(attributeOption);
+                                notAllowedCombinationOption.setNotAllowedCombination(finalParentCombination);
+
                                 return notAllowedCombinationOption;
-                            }).collect(Collectors.toList())
-                    );
-                    return notAllowedCombination;
+                            })
+                            .collect(Collectors.toList());
+
+                    // Assign options to parent and save
+                    parentCombination.setOptions(options);
+                    return notAllowedCombinationRepository.save(parentCombination);
+
                 })
                 .collect(Collectors.toList());
 

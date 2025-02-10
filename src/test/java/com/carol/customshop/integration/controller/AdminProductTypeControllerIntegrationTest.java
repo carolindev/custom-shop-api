@@ -1,11 +1,11 @@
 package com.carol.customshop.integration.controller;
 
-import com.carol.customshop.dto.AddAttributesRequest;
-import com.carol.customshop.dto.ProductTypeRequest;
-import com.carol.customshop.dto.AttributeRequest;
-import com.carol.customshop.dto.ProductTypeRequestConfig;
+import com.carol.customshop.dto.*;
 import com.carol.customshop.entity.ProductType;
+import com.carol.customshop.entity.ProductTypeAttribute;
+import com.carol.customshop.entity.ProductTypeAttributeOption;
 import com.carol.customshop.entity.ProductTypeConfig;
+import com.carol.customshop.repository.ProductTypeAttributeRepository;
 import com.carol.customshop.repository.ProductTypeRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,9 +18,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -40,13 +39,17 @@ class AdminProductTypeControllerIntegrationTest {
     @Autowired
     private ProductTypeRepository productTypeRepository;
 
+    @Autowired
+    private ProductTypeAttributeRepository productTypeAttributeRepository;
+
     private String fullyCustomizableProductTypeId;
+    private ProductType fullyCustomizableProductType;
     private String notCustomizableProductTypeId;
 
     @BeforeEach
     void setUp() {
         // Create Fully Customizable Product Type
-        ProductType fullyCustomizableProductType = new ProductType();
+        fullyCustomizableProductType = new ProductType();
         fullyCustomizableProductType.setName("Bicycle");
         fullyCustomizableProductType.setConfig(new ProductTypeConfig("fully_customizable"));
         fullyCustomizableProductType = productTypeRepository.save(fullyCustomizableProductType);
@@ -58,6 +61,48 @@ class AdminProductTypeControllerIntegrationTest {
         notCustomizableProductType.setConfig(new ProductTypeConfig("not_customizable"));
         notCustomizableProductType = productTypeRepository.save(notCustomizableProductType);
         notCustomizableProductTypeId = String.valueOf(notCustomizableProductType.getId());
+
+        // Add Attributes with Possible Options
+        fullyCustomizableProductType = addAttributesWithOptions(fullyCustomizableProductType);
+    }
+
+    private ProductType addAttributesWithOptions(ProductType productType) {
+        List<ProductTypeAttribute> attributes = new ArrayList<>();
+
+        ProductTypeAttribute frameFinish = new ProductTypeAttribute();
+        frameFinish.setProductType(productType);
+        frameFinish.setAttributeName("Frame Finish");
+
+        ProductTypeAttributeOption matte = new ProductTypeAttributeOption();
+        matte.setName("Matte");
+        matte.setAttribute(frameFinish);
+
+        ProductTypeAttributeOption shiny = new ProductTypeAttributeOption();
+        shiny.setName("Shiny");
+        shiny.setAttribute(frameFinish);
+
+        frameFinish.setOptions(List.of(matte, shiny));
+        attributes.add(frameFinish);
+
+        ProductTypeAttribute wheels = new ProductTypeAttribute();
+        wheels.setProductType(productType);
+        wheels.setAttributeName("Wheels");
+
+        ProductTypeAttributeOption roadWheels = new ProductTypeAttributeOption();
+        roadWheels.setName("Road Wheels");
+        roadWheels.setAttribute(wheels);
+
+        ProductTypeAttributeOption cruiserWheels = new ProductTypeAttributeOption();
+        cruiserWheels.setName("Cruiser Wheels");
+        cruiserWheels.setAttribute(wheels);
+
+        wheels.setOptions(List.of(roadWheels, cruiserWheels));
+        attributes.add(wheels);
+
+        attributes = productTypeAttributeRepository.saveAll(attributes);
+
+        productType.setAttributes(attributes);
+        return productTypeRepository.save(productType);
     }
 
     @Test
@@ -108,5 +153,43 @@ class AdminProductTypeControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(addRequest)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Cannot add attributes to a non-fully-customizable product type."));
+    }
+
+    @Test
+    void shouldAddNotAllowedCombinationsSuccessfully() throws Exception {
+
+
+        Long atId1 = fullyCustomizableProductType.getAttributes().get(0).getId();
+        Long opId1 = fullyCustomizableProductType.getAttributes().get(0).getOptions().get(0).getId();
+
+        Long atId2 = fullyCustomizableProductType.getAttributes().get(1).getId();
+        Long opId2 = fullyCustomizableProductType.getAttributes().get(1).getOptions().get(0).getId();
+
+
+        // Given: A valid request with at least two attribute-options in each combination
+        NotAllowedCombinationsRequest request = new NotAllowedCombinationsRequest(
+                fullyCustomizableProductTypeId, // Ensure UUID is correctly formatted
+                List.of(
+                        List.of(
+                                new NotAllowedCombinationItem(atId1, opId1),
+                                new NotAllowedCombinationItem(atId2, opId2)
+                        )/*,
+                        List.of(
+                                new NotAllowedCombinationItem(103L, 3003L),
+                                new NotAllowedCombinationItem(104L, 4004L),
+                                new NotAllowedCombinationItem(105L, 5005L)
+                        )*/
+                )
+        );
+
+        // When: Sending a POST request
+        mockMvc.perform(post("/admin/product-types/not-allowed-combinations")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+
+                // Then: Expect success response
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message")
+                        .value("Not-allowed combinations added successfully."));
     }
 }

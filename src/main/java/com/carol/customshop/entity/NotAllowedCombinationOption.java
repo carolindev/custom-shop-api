@@ -20,9 +20,11 @@ public class NotAllowedCombinationOption {
     @JoinColumn(name = "not_allowed_combination_id", nullable = false)
     private NotAllowedCombination notAllowedCombination;
 
-    @Column(name = "attribute_id", nullable = false)
-    private Long attributeId;
+    @ManyToOne
+    @JoinColumn(name = "attribute_id", nullable = false)
+    private ProductTypeAttribute attribute;
 
-    @Column(name = "attribute_option_id", nullable = false)
-    private Long attributeOptionId;
+    @ManyToOne
+    @JoinColumn(name = "attribute_option_id", nullable = false)
+    private ProductTypeAttributeOption attributeOption;
 }

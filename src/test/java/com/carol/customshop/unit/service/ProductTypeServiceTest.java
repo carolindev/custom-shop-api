@@ -3,7 +3,11 @@ package com.carol.customshop.unit.service;
 import com.carol.customshop.dto.NotAllowedCombinationItem;
 import com.carol.customshop.dto.NotAllowedCombinationsRequest;
 import com.carol.customshop.entity.ProductType;
+import com.carol.customshop.entity.ProductTypeAttributeOption;
 import com.carol.customshop.entity.ProductTypeConfig;
+import com.carol.customshop.repository.NotAllowedCombinationRepository;
+import com.carol.customshop.repository.ProductTypeAttributeOptionRepository;
+import com.carol.customshop.repository.ProductTypeAttributeRepository;
 import com.carol.customshop.repository.ProductTypeRepository;
 import com.carol.customshop.service.CustomizableProductTypeService;
 import com.carol.customshop.service.NotCustomizableProductTypeService;
@@ -35,6 +39,15 @@ class ProductTypeServiceTest {
     private ProductTypeRepository productTypeRepository;
 
     @Mock
+    private ProductTypeAttributeRepository productTypeAttributeRepository;
+
+    @Mock
+    private ProductTypeAttributeOptionRepository productTypeAttributeOptionRepository;
+
+    @Mock
+    private NotAllowedCombinationRepository notAllowedCombinationRepository;
+
+    @Mock
     private ProductTypeServiceFactory productTypeServiceFactory;
 
     private UUID fullyCustomizableProductTypeId;
@@ -61,39 +74,15 @@ class ProductTypeServiceTest {
             when(productTypeRepository.findById(fullyCustomizableProductTypeId))
                     .thenReturn(Optional.of(fullyCustomizableProductType));
 
-            IProductTypeService cService = new CustomizableProductTypeService(productTypeRepository);
+            IProductTypeService cService = new CustomizableProductTypeService(
+                    productTypeRepository,
+                    notAllowedCombinationRepository,
+                    productTypeAttributeRepository,
+                    productTypeAttributeOptionRepository
+            );
             when(productTypeServiceFactory.getService(eq("fully_customizable")))
                     .thenReturn(cService);
         }
-    }
-
-    @Test
-    void shouldSaveNotAllowedCombinationsSuccessfully() {
-        // Given: A valid request with at least two attribute-options in each combination
-        NotAllowedCombinationsRequest request = new NotAllowedCombinationsRequest(
-                fullyCustomizableProductTypeId.toString(), // Ensure UUID is converted to string
-                List.of(
-                        List.of(
-                                new NotAllowedCombinationItem(101L, 1001L),
-                                new NotAllowedCombinationItem(102L, 2002L)
-                        ),
-                        List.of(
-                                new NotAllowedCombinationItem(103L, 3003L),
-                                new NotAllowedCombinationItem(104L, 4004L),
-                                new NotAllowedCombinationItem(105L, 5005L)
-                        )
-                )
-        );
-
-        // When: Adding not-allowed combinations
-        productTypeService.addNotAllowedCombinations(request);
-
-        // Then: Verify repository interaction (data is saved)
-        verify(productTypeRepository, times(1)).save(fullyCustomizableProductType);
-
-        // Ensure not-allowed combinations were added
-        assertFalse(fullyCustomizableProductType.getNotAllowedCombinations().isEmpty(),
-                "Not-allowed combinations should be added");
     }
 
     @Test
