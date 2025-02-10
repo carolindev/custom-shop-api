@@ -4,6 +4,7 @@ import com.carol.customshop.dto.AddAttributesRequest;
 import com.carol.customshop.dto.NotAllowedCombinationsRequest;
 import com.carol.customshop.dto.ProductTypeRequest;
 import com.carol.customshop.entity.ProductType;
+import com.carol.customshop.entity.ProductTypeConfig;
 import com.carol.customshop.repository.ProductTypeRepository;
 import com.carol.customshop.service.interfaces.IProductTypeService;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,10 @@ public class ProductTypeService {
     public UUID createProductType(ProductTypeRequest request) {
         ProductType productType = new ProductType();
         productType.setName(request.getName());
+
+        ProductTypeConfig config = new ProductTypeConfig();
+        config.setCustomisation(request.getConfig().getCustomisation());
+        productType.setConfig(config);
 
         productType = productTypeRepository.save(productType);
 
