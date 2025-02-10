@@ -58,20 +58,22 @@ public class CustomizableProductTypeService implements IProductTypeService {
 
     @Override
     @Transactional
-    public void addNotAllowedCombinations(String productTypeId,
-                                          List<List<NotAllowedCombinationItem>> notAllowedCombinations) {
-        UUID productTypeUUID = UUID.fromString(productTypeId);
-        ProductType productType = productTypeRepository.findById(productTypeUUID)
-                .orElseThrow(() -> new RuntimeException("No ProductType found with id=" + productTypeId));
+    public void
+        addNotAllowedCombinations(String productTypeId, List<List<NotAllowedCombinationItem>> notAllowedCombinations) {
 
-        // 1. Basic null or empty check on the entire list
+        UUID productTypeUUID = UUID.fromString(productTypeId);
+        ProductType productType = productTypeRepository.findById(UUID.fromString(productTypeId))
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Product type not found.")
+                );
+
         if (notAllowedCombinations == null || notAllowedCombinations.isEmpty()) {
             throw new IllegalArgumentException(
                     "There must be at least one not-allowed combination provided."
             );
         }
 
-        // 2. Ensure each sub-list has at least 2 items.
+        // Ensure each sub-list has at least 2 items.
         for (List<NotAllowedCombinationItem> combination : notAllowedCombinations) {
             if (combination == null || combination.size() < 2) {
                 throw new IllegalArgumentException(
@@ -80,7 +82,7 @@ public class CustomizableProductTypeService implements IProductTypeService {
             }
         }
 
-        // 3. Convert the List<List<NotAllowedCombinationItem>> into entities
+        // Convert the List<List<NotAllowedCombinationItem>> into entities
         List<NotAllowedCombination> combinations = notAllowedCombinations.stream()
                 .map(combination -> {
                     NotAllowedCombination notAllowedCombination = new NotAllowedCombination();
@@ -98,7 +100,6 @@ public class CustomizableProductTypeService implements IProductTypeService {
                 })
                 .collect(Collectors.toList());
 
-        // 4. Add the new NotAllowedCombinations to the ProductType, then save
         productType.getNotAllowedCombinations().addAll(combinations);
         productTypeRepository.save(productType);
     }

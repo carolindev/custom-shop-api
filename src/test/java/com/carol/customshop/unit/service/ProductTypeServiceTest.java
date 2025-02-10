@@ -6,6 +6,7 @@ import com.carol.customshop.entity.ProductType;
 import com.carol.customshop.entity.ProductTypeConfig;
 import com.carol.customshop.repository.ProductTypeRepository;
 import com.carol.customshop.service.CustomizableProductTypeService;
+import com.carol.customshop.service.NotCustomizableProductTypeService;
 import com.carol.customshop.service.ProductTypeService;
 import com.carol.customshop.service.ProductTypeServiceFactory;
 import com.carol.customshop.service.interfaces.IProductTypeService;
@@ -40,24 +41,30 @@ class ProductTypeServiceTest {
     private ProductType fullyCustomizableProductType;
 
     @BeforeEach
-    void setUp() {
-        fullyCustomizableProductTypeId = UUID.randomUUID();
+    void setUp(TestInfo testInfo) {
+        String methodName = testInfo.getTestMethod()
+                .map(method -> method.getName())
+                .orElse("");
 
-        // Mock a fully customizable product type
-        fullyCustomizableProductType = new ProductType();
-        fullyCustomizableProductType.setId(fullyCustomizableProductTypeId);
+        if (methodName.equals("shouldSaveNotAllowedCombinationsSuccessfully")
+                || methodName.equals("shouldThrowExceptionWhenCombinationHasLessThanTwoOptions"))
+        {
+            fullyCustomizableProductTypeId = UUID.randomUUID();
 
-        ProductTypeConfig config = new ProductTypeConfig();
-        config.setCustomisation("fully_customizable"); // Ensure it's customizable
-        fullyCustomizableProductType.setConfig(config);
+            fullyCustomizableProductType = new ProductType();
+            fullyCustomizableProductType.setId(fullyCustomizableProductTypeId);
 
-        when(productTypeRepository.findById(fullyCustomizableProductTypeId))
-                .thenReturn(Optional.of(fullyCustomizableProductType));
+            ProductTypeConfig config = new ProductTypeConfig();
+            config.setCustomisation("fully_customizable");
+            fullyCustomizableProductType.setConfig(config);
 
-        IProductTypeService CustomizableProductTypeService = new CustomizableProductTypeService(productTypeRepository);
+            when(productTypeRepository.findById(fullyCustomizableProductTypeId))
+                    .thenReturn(Optional.of(fullyCustomizableProductType));
 
-        when(productTypeServiceFactory.getService(anyString()))
-                .thenReturn(CustomizableProductTypeService);
+            IProductTypeService cService = new CustomizableProductTypeService(productTypeRepository);
+            when(productTypeServiceFactory.getService(eq("fully_customizable")))
+                    .thenReturn(cService);
+        }
     }
 
     @Test
@@ -107,5 +114,65 @@ class ProductTypeServiceTest {
         });
 
         assertEquals("Each not-allowed combination must have at least two attribute-option pairs.", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenProductTypeDoesNotExist() {
+        // Given: A request with a non-existent product type
+        UUID invalidProductTypeId = UUID.randomUUID();
+        NotAllowedCombinationsRequest request = new NotAllowedCombinationsRequest(
+                invalidProductTypeId.toString(),
+                List.of(
+                        List.of(
+                                new NotAllowedCombinationItem(101L, 1001L),
+                                new NotAllowedCombinationItem(102L, 2002L)
+                        )
+                )
+        );
+
+        when(productTypeRepository.findById(invalidProductTypeId)).thenReturn(Optional.empty());
+
+        // When & Then: Expect IllegalArgumentException
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            productTypeService.addNotAllowedCombinations(request);
+        });
+
+        assertEquals("Product type not found.", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenProductTypeIsNotCustomizable() {
+        UUID productTypeId = UUID.randomUUID();
+        ProductType notCustomizableProductType = new ProductType();
+        notCustomizableProductType.setId(productTypeId);
+
+        ProductTypeConfig config = new ProductTypeConfig();
+        config.setCustomisation("not_customizable");
+        notCustomizableProductType.setConfig(config);
+
+        // Stub the repository to return this productType
+        when(productTypeRepository.findById(productTypeId))
+                .thenReturn(Optional.of(notCustomizableProductType));
+
+        // Stub the factory to return the *service* for "not_customizable"
+        when(productTypeServiceFactory.getService(eq("not_customizable")))
+                .thenReturn(new NotCustomizableProductTypeService());
+
+        NotAllowedCombinationsRequest request = new NotAllowedCombinationsRequest(
+                productTypeId.toString(),
+                List.of(
+                        List.of(
+                                new NotAllowedCombinationItem(101L, 1001L),
+                                new NotAllowedCombinationItem(102L, 2002L)
+                        )
+                )
+        );
+
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+            productTypeService.addNotAllowedCombinations(request);
+        });
+
+        assertEquals("Cannot add combinations to a non-fully-customizable product type.",
+                exception.getMessage());
     }
 }

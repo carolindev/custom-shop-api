@@ -54,7 +54,9 @@ public class ProductTypeService {
     @Transactional
     public void addNotAllowedCombinations(NotAllowedCombinationsRequest request) {
         ProductType productType = productTypeRepository.findById(UUID.fromString(request.getProductTypeId()))
-                .orElseThrow(() -> new RuntimeException("No ProductType found with id=" + request.getProductTypeId()));
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Product type not found.")
+                );
 
         String customisation = productType.getConfig().getCustomisation();
 
