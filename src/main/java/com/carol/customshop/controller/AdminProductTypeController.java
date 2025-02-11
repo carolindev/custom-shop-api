@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -27,6 +28,20 @@ public class AdminProductTypeController implements AdminProductTypesApi {
                 .productTypeId(productTypeId);
 
         return ResponseEntity.status(201).body(response);
+    }
+
+    @Override
+    public ResponseEntity<ProductTypeDetailsResponse> getProductTypeDetails(UUID productTypeId) {
+        ProductTypeDetailsResponse response = productTypeService.getProductTypeDetails(productTypeId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
+    public ResponseEntity<GetProductTypes200Response> getProductTypes() {
+        List<ProductTypeItemResponse> productTypes = productTypeService.getProductTypes();
+        GetProductTypes200Response response = new GetProductTypes200Response();
+        response.setProductTypes(productTypes);
+        return  ResponseEntity.ok(response);
     }
 
     @Override
@@ -51,7 +66,6 @@ public class AdminProductTypeController implements AdminProductTypesApi {
         try {
             productTypeService.addNotAllowedCombinations(notAllowedCombinationsRequest);
 
-            // Build the success response
             AddNotAllowedCombinations200Response response = new AddNotAllowedCombinations200Response();
             response.setMessage("Not-allowed combinations added successfully.");
             return ResponseEntity.ok(response);

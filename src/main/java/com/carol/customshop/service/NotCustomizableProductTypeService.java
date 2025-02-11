@@ -2,10 +2,13 @@ package com.carol.customshop.service;
 
 import com.carol.customshop.dto.AttributeRequest;
 import com.carol.customshop.dto.NotAllowedCombinationItem;
+import com.carol.customshop.dto.ProductTypeDetailsResponse;
 import com.carol.customshop.service.interfaces.IProductTypeService;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service("not_customizableProductTypeService")
 public class NotCustomizableProductTypeService implements IProductTypeService {
@@ -21,5 +24,10 @@ public class NotCustomizableProductTypeService implements IProductTypeService {
             List<List<NotAllowedCombinationItem>> notAllowedCombinations
     ) {
         throw new IllegalStateException("Cannot add combinations to a non-fully-customizable product type.");
+    }
+
+    @Override
+    public ProductTypeDetailsResponse getAdditionalProductTypeDetails(UUID productTypeId) {
+        return new ProductTypeDetailsResponse();
     }
 }

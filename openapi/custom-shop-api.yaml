@@ -8,7 +8,7 @@ info:
     email: karolni90@gmail.com
 
 servers:
-  - url: http://localhost:8080/api
+  - url: http://localhost:8080
     description: Local development server
 
 paths:
@@ -40,6 +40,30 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "500":
           $ref: "#/components/responses/InternalServerError"
+    get:
+      summary: Get list of existing product types
+      description: Returns a list of all existing product types with their ID, name, and configuration.
+      operationId: getProductTypes
+      tags:
+        - Admin - Product Types
+      responses:
+        "200":
+          description: Successfully retrieved the list of product types.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  productTypes:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ProductTypeItemResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /admin/product-types/attributes:
     post:
       summary: Add attributes to an existing product type
@@ -112,6 +136,41 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/InternalServerError"
+  /admin/product-types/{productTypeId}:
+    get:
+      summary: Get product type details
+      description: Returns detailed information about a specific product type, including its attributes, options, and not-allowed combinations.
+      operationId: getProductTypeDetails
+      tags:
+        - Admin - Product Types
+      parameters:
+        - name: productTypeId
+          in: path
+          required: true
+          description: The unique identifier of the product type.
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        "200":
+          description: Successfully retrieved product type details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductTypeDetailsResponse"
+        "404":
+          description: Product type not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
@@ -137,7 +196,27 @@ components:
       properties:
         customisation:
           type: string
-          example: "fullyCustomizable"
+          example: "fully_customizable"
+
+    ProductTypeItemResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the product type.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          description: Name of the product type.
+          example: "Bicycle"
+        config:
+          type: object
+          properties:
+            customisation:
+              type: string
+              description: Defines whether the product type is customizable.
+              example: "fully_customizable"
 
     AddAttributesRequest:
       type: object
@@ -255,6 +334,80 @@ components:
           type: integer
           format: int64
           example: 1001
+    ProductTypeDetailsResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the product type.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          description: Name of the product type.
+          example: "Bicycle"
+        config:
+          type: object
+          properties:
+            customization:
+              type: string
+              description: Defines whether the product type is customizable.
+              example: "fully_customizable"
+        attributes:
+          type: array
+          description: List of attributes associated with the product type.
+          items:
+            $ref: "#/components/schemas/ProductAttribute"
+        not_allowed_combinations:
+          type: array
+          description: List of not-allowed combinations for this product type.
+          items:
+            $ref: "#/components/schemas/NotAllowedCombinationR"
+
+    ProductAttribute:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier of the attribute.
+          example: 1
+        name:
+          type: string
+          description: Name of the attribute.
+          example: "Frame Finish"
+        options:
+          type: array
+          description: List of available options for this attribute.
+          items:
+            $ref: "#/components/schemas/AttributeOption"
+
+    AttributeOption:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier of the attribute option.
+          example: 101
+        name:
+          type: string
+          description: Name of the option.
+          example: "Matte"
+
+    NotAllowedCombinationR:
+      type: object
+      properties:
+        combination_id:
+          type: integer
+          format: int64
+          description: Unique identifier of the not-allowed combination.
+          example: 9001
+        options:
+          type: array
+          description: List of options that form a not-allowed combination.
+          items:
+            $ref: "#/components/schemas/AttributeOption"
 
     ErrorResponse:
       type: object
