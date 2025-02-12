@@ -135,8 +135,7 @@ class AdminProductTypeControllerIntegrationTest {
         mockMvc.perform(post("/admin/product-types/attributes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(addRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value("Attributes added successfully"));
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -173,12 +172,7 @@ class AdminProductTypeControllerIntegrationTest {
                         List.of(
                                 new NotAllowedCombinationItem(atId1, opId1),
                                 new NotAllowedCombinationItem(atId2, opId2)
-                        )/*,
-                        List.of(
-                                new NotAllowedCombinationItem(103L, 3003L),
-                                new NotAllowedCombinationItem(104L, 4004L),
-                                new NotAllowedCombinationItem(105L, 5005L)
-                        )*/
+                        )
                 )
         );
 

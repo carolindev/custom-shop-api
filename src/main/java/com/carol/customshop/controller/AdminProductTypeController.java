@@ -3,6 +3,7 @@ package com.carol.customshop.controller;
 import com.carol.customshop.api.AdminProductTypesApi;
 import com.carol.customshop.dto.*;
 import com.carol.customshop.service.ProductTypeService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,42 +47,22 @@ public class AdminProductTypeController implements AdminProductTypesApi {
 
     @Override
     public ResponseEntity addAttributesToProductType(AddAttributesRequest addAttributesRequest) {
-        try {
-            productTypeService.addAttributesToProductType(addAttributesRequest);
+        productTypeService.addAttributesToProductType(addAttributesRequest);
 
-            AddAttributesToProductType200Response response = new AddAttributesToProductType200Response();
-            response.setMessage("Attributes added successfully");
+        UUID productTypeId = UUID.fromString(addAttributesRequest.getProductTypeID());
+        // Fetch updated product type details
+        ProductTypeDetailsResponse updatedProductType = productTypeService.getProductTypeDetails(productTypeId);
 
-            return ResponseEntity.ok(response);
-        } catch (IllegalStateException e) {
-            // Handle case where attributes cannot be added
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setError(e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
-        }
+        return ResponseEntity.ok(updatedProductType);
     }
 
     @Override
     public ResponseEntity addNotAllowedCombinations(NotAllowedCombinationsRequest notAllowedCombinationsRequest) {
-        try {
-            productTypeService.addNotAllowedCombinations(notAllowedCombinationsRequest);
+        productTypeService.addNotAllowedCombinations(notAllowedCombinationsRequest);
 
-            AddNotAllowedCombinations200Response response = new AddNotAllowedCombinations200Response();
-            response.setMessage("Not-allowed combinations added successfully.");
-            return ResponseEntity.ok(response);
-
-        } catch (IllegalArgumentException e) {
-            // Handle validation exceptions (e.g., invalid request format, not enough combinations)
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setError(e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse);
-
-        } catch (RuntimeException e) {
-            // Handle unexpected internal server errors
-            ErrorResponse errorResponse = new ErrorResponse();
-            errorResponse.setError("An unexpected error occurred.");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
-        }
+        AddNotAllowedCombinations200Response response = new AddNotAllowedCombinations200Response();
+        response.setMessage("Not-allowed combinations added successfully.");
+        return ResponseEntity.ok(response);
     }
 
 }

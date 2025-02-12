@@ -85,11 +85,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "Attributes added successfully"
+                $ref: "#/components/schemas/ProductTypeDetailsResponse"
         "400":
           description: Bad request - Cannot add attributes to a non-fully-customizable product type or invalid data
           content:
