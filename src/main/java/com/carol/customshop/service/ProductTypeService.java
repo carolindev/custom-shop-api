@@ -20,6 +20,7 @@ public class ProductTypeService {
     private final ProductTypeRepository productTypeRepository;
 
     private final ProductTypeAttributeRepository productTypeAttributeRepository;
+
     private final ProductTypeAttributeOptionRepository productTypeAttributeOptionRepository;
 
     private final NotAllowedCombinationRepository notAllowedCombinationRepository;
@@ -49,7 +50,7 @@ public class ProductTypeService {
         config.setCustomisation(request.getConfig().getCustomisation());
         productType.setConfig(config);
 
-        productType = productTypeRepository.save(productType);
+        productTypeRepository.save(productType);
 
         return productType.getId();
     }
