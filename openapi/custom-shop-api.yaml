@@ -167,6 +167,96 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /admin/products:
+    post:
+      summary: Create a new product
+      description: Creates a product with images, product details, and customization options.
+      operationId: createProduct
+      tags:
+        - Admin - Product
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Cruiser Classic 7"
+                sku:
+                  type: string
+                  example: "BIKE-001"
+                description:
+                  type: string
+                  example: "A comfortable cruiser bike with a matte black finish."
+                price:
+                  type: number
+                  format: float
+                  example: 499.99
+                productTypeId:
+                  type: string
+                  format: uuid
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+                main_picture:
+                  type: string
+                  format: binary
+                image_gallery:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                attributeOverrides:
+                  $ref: "#/components/schemas/ProductAttributeOverrides"
+                notAllowedCombinationsOverrides:
+                  $ref: "#/components/schemas/NotAllowedCombinationsOverrides"
+                productNotAllowedCombinations:
+                  $ref: "#/components/schemas/ProductNotAllowedCombinations"
+      responses:
+        "201":
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductCreationResponse"
+        "400":
+          description: Bad request - Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+  /admin/products/{productId}:
+    get:
+      summary: Get product details
+      description: Retrieve detailed information about a product, including attributes, options, and not allowed combinations.
+      operationId: getProductDetails
+      tags:
+        - Admin - Product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        "200":
+          description: Successfully retrieved product details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductDetailsResponse"
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
 components:
   schemas:
@@ -353,14 +443,14 @@ components:
           type: array
           description: List of attributes associated with the product type.
           items:
-            $ref: "#/components/schemas/ProductAttribute"
+            $ref: "#/components/schemas/ProductAttributeResponse"
         not_allowed_combinations:
           type: array
           description: List of not-allowed combinations for this product type.
           items:
             $ref: "#/components/schemas/NotAllowedCombinationR"
 
-    ProductAttribute:
+    ProductAttributeResponse:
       type: object
       properties:
         id:
@@ -404,6 +494,215 @@ components:
           description: List of options that form a not-allowed combination.
           items:
             $ref: "#/components/schemas/AttributeOption"
+    ProductDetailsResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          example: "Cruiser Classic 7"
+        sku:
+          type: string
+          example: "CR-CLASSIC-7"
+        description:
+          type: string
+          example: "A high-quality cruiser bicycle with a matte finish and durable wheels."
+        price:
+          type: number
+          format: float
+          example: 499.99
+        mainPicture:
+          type: string
+          example: "https://yourserver.com/uploads/main_picture_550e8400-e29b-41d4-a716-446655440000.jpg"
+        imageGallery:
+          type: array
+          items:
+            type: string
+          example:
+            - "https://yourserver.com/uploads/image1.jpg"
+            - "https://yourserver.com/uploads/image2.jpg"
+        productType:
+          $ref: "#/components/schemas/ProductTypeProduct"
+        productAttributes:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttributeResponseProduct"
+        productNotAllowedCombinations:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotAllowedCombinationResponse"
+        specificNotAllowedCombinations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProductNotAllowedCombinationResponse"
+
+    ProductTypeProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "91a2b3c4-d5e6-7890-f1g2-h3i4j5k6l7m8"
+        name:
+          type: string
+          example: "Bicycle"
+        config:
+          type: object
+          properties:
+            customisation:
+              type: string
+              example: "fullyCustomizable"
+
+    AttributeResponseProduct:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 32
+        name:
+          type: string
+          example: "Frame"
+        active:
+          type: boolean
+          example: true
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttributeOptionResponse"
+
+    AttributeOptionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 93
+        name:
+          type: string
+          example: "frame1"
+        outOfStock:
+          type: boolean
+          example: false
+        active:
+          type: boolean
+          example: true
+
+    NotAllowedCombinationResponse:
+      type: object
+      properties:
+        combinationId:
+          type: integer
+          format: int64
+          example: 4
+        active:
+          type: boolean
+          example: true
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotAllowedCombinationOptionResponse"
+
+    ProductNotAllowedCombinationResponse:
+      type: object
+      properties:
+        combinationId:
+          type: integer
+          format: int64
+          example: 10
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/NotAllowedCombinationOptionResponse"
+
+    NotAllowedCombinationOptionResponse:
+      type: object
+      properties:
+        attributeId:
+          type: integer
+          format: int64
+          example: 101
+        attributeOptionId:
+          type: integer
+          format: int64
+          example: 1001
+
+    ProductAttributeOverrides:
+      type: object
+      properties:
+        deactivatedAttributes:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeactivatedAttribute"
+        deactivatedOptions:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeactivatedOption"
+        outOfStockOptions:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeactivatedOption"
+
+    DeactivatedAttribute:
+      type: object
+      properties:
+        attributeId:
+          type: integer
+          format: int64
+          example: 32
+
+    DeactivatedOption:
+      type: object
+      properties:
+        attributeId:
+          type: integer
+          format: int64
+          example: 33
+        optionId:
+          type: integer
+          format: int64
+          example: 96
+        isOutOfStock:
+          type: boolean
+
+    NotAllowedCombinationsOverrides:
+      type: object
+      properties:
+        deactivate:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeactivateCombination"
+
+    DeactivateCombination:
+      type: object
+      properties:
+        combinationId:
+          type: integer
+          format: int64
+          example: 4
+
+    ProductNotAllowedCombinations:
+      type: array
+      minItems: 1
+      items:
+        type: array
+        minItems: 2
+        items:
+          $ref: "#/components/schemas/NotAllowedCombinationItem"
+
+    ProductCreationResponse:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        message:
+          type: string
+          example: "Product created successfully"
 
     ErrorResponse:
       type: object

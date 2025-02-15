@@ -31,3 +31,5 @@ replay_pid*
 
 # Maven target directory (compiled classes, JARs, etc.)
 target/
+
+uploads

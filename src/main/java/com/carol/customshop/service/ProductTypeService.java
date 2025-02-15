@@ -1,9 +1,10 @@
 package com.carol.customshop.service;
 
 import com.carol.customshop.dto.*;
-import com.carol.customshop.entity.ProductType;
-import com.carol.customshop.entity.ProductTypeAttributeOption;
-import com.carol.customshop.entity.ProductTypeConfig;
+import com.carol.customshop.entity.*;
+import com.carol.customshop.repository.NotAllowedCombinationRepository;
+import com.carol.customshop.repository.ProductTypeAttributeOptionRepository;
+import com.carol.customshop.repository.ProductTypeAttributeRepository;
 import com.carol.customshop.repository.ProductTypeRepository;
 import com.carol.customshop.service.interfaces.IProductTypeService;
 import org.springframework.stereotype.Service;
@@ -18,11 +19,24 @@ public class ProductTypeService {
 
     private final ProductTypeRepository productTypeRepository;
 
+    private final ProductTypeAttributeRepository productTypeAttributeRepository;
+    private final ProductTypeAttributeOptionRepository productTypeAttributeOptionRepository;
+
+    private final NotAllowedCombinationRepository notAllowedCombinationRepository;
+
     private final ProductTypeServiceFactory productTypeServiceFactory;
 
     public ProductTypeService(
-            ProductTypeRepository productTypeRepository, ProductTypeServiceFactory productTypeServiceFactory) {
+            ProductTypeRepository productTypeRepository,
+            ProductTypeAttributeRepository productTypeAttributeRepository,
+            ProductTypeAttributeOptionRepository productTypeAttributeOptionRepository,
+            NotAllowedCombinationRepository notAllowedCombinationRepository,
+            ProductTypeServiceFactory productTypeServiceFactory
+    ) {
         this.productTypeRepository = productTypeRepository;
+        this.productTypeAttributeRepository = productTypeAttributeRepository;
+        this.productTypeAttributeOptionRepository = productTypeAttributeOptionRepository;
+        this.notAllowedCombinationRepository = notAllowedCombinationRepository;
         this.productTypeServiceFactory = productTypeServiceFactory;
     }
 
@@ -87,7 +101,7 @@ public class ProductTypeService {
         return response;
     }
 
-    private ProductType getProductTypeById(String productTypeId) {
+    public ProductType getProductTypeById(String productTypeId) {
         return productTypeRepository.findById(UUID.fromString(productTypeId))
                 .orElseThrow(() -> new IllegalArgumentException("Product type not found."));
     }
@@ -109,5 +123,23 @@ public class ProductTypeService {
         response.setConfig(config);
 
         return response;
+    }
+
+    public ProductTypeAttribute getProductTypeAttributeById(Long attributeId) {
+        return productTypeAttributeRepository.findById(attributeId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Product Type Attribute not found with ID: " + attributeId));
+    }
+
+    public ProductTypeAttributeOption getProductTypeAttributeOptionById(Long optionId) {
+        return productTypeAttributeOptionRepository.findById(optionId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Product Type Attribute Option not found with ID: " + optionId));
+    }
+
+    public NotAllowedCombination getNotAllowedCombinationById(Long combinationId) {
+        return notAllowedCombinationRepository.findById(combinationId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Not-allowed combination not found with ID: " + combinationId));
     }
 }

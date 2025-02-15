@@ -100,7 +100,7 @@ public class CustomizableProductTypeService implements IProductTypeService {
                     NotAllowedCombination parentCombination = new NotAllowedCombination();
                     parentCombination.setProductType(productType);
 
-                    List<NotAllowedCombinationOption> options = combination.stream()
+                    List<NotAllowedCombinationElement> options = combination.stream()
                             .map(option -> {
                                 // Fetch and validate attribute
                                 ProductTypeAttribute attribute =
@@ -131,8 +131,8 @@ public class CustomizableProductTypeService implements IProductTypeService {
                                 }
 
                                 // Create NotAllowedCombinationOption entity
-                                NotAllowedCombinationOption notAllowedCombinationOption =
-                                        new NotAllowedCombinationOption();
+                                NotAllowedCombinationElement notAllowedCombinationOption =
+                                        new NotAllowedCombinationElement();
                                 notAllowedCombinationOption.setAttribute(attribute);
                                 notAllowedCombinationOption.setAttributeOption(attributeOption);
                                 notAllowedCombinationOption.setNotAllowedCombination(parentCombination);
@@ -157,9 +157,9 @@ public class CustomizableProductTypeService implements IProductTypeService {
                 .orElseThrow(() -> new IllegalArgumentException("Product type not found."));
 
         // Fetch Attributes and Options
-        List<ProductAttribute> attributes = productType.getAttributes().stream()
+        List<ProductAttributeResponse> attributes = productType.getAttributes().stream()
                 .map(attribute -> {
-                    ProductAttribute productAttribute = new ProductAttribute();
+                    ProductAttributeResponse productAttribute = new ProductAttributeResponse();
                     productAttribute.setId(attribute.getId());
                     productAttribute.setName(attribute.getAttributeName());
 

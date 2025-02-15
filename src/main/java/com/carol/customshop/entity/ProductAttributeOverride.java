@@ -6,25 +6,23 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "not_allowed_combination_options")
+@Table(name = "product_attribute_overrides")
 @Getter
 @Setter
 @NoArgsConstructor
-public class NotAllowedCombinationOption {
+public class ProductAttributeOverride {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "not_allowed_combination_id", nullable = false)
-    private NotAllowedCombination notAllowedCombination;
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
     @ManyToOne
     @JoinColumn(name = "attribute_id", nullable = false)
     private ProductTypeAttribute attribute;
 
-    @ManyToOne
-    @JoinColumn(name = "attribute_option_id", nullable = false)
-    private ProductTypeAttributeOption attributeOption;
+    private boolean active; // Allows the product to override activation per attribute
 }
