@@ -760,4 +760,9 @@ public class ProductService {
         Product product = getProductById(id);
         return product.getMainPicture() != null ? getBaseUrl() + product.getMainPicture() : null;
     }
+
+    public void deleteProduct(UUID productId) {
+        Product product = getProductById(productId);
+        productRepository.delete(product);
+    }
 }

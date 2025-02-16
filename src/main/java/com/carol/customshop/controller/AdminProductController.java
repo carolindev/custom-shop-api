@@ -51,4 +51,10 @@ public class AdminProductController implements AdminProductApi {
         ProductDetailsResponse productDetails = productService.getProductDetails(productId);
         return ResponseEntity.ok(productDetails);
     }
+
+    @Override
+    public ResponseEntity<Void> deleteProduct(UUID productId) {
+        productService.deleteProduct(productId);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -298,6 +298,41 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "500":
           $ref: "#/components/responses/InternalServerError"
+    delete:
+      summary: Delete a product by ID
+      description: Permanently deletes a product and all related data.
+      operationId: deleteProduct
+      tags:
+        - Admin - Product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: The UUID of the product to delete.
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Product deleted successfully.
+        "400":
+          description: Invalid request or product cannot be deleted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Product not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
   /v1/products/{productId}/available-options:
     get:
       summary: Get available options for a requested attribute
