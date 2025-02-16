@@ -12,7 +12,7 @@ servers:
     description: Local development server
 
 paths:
-  /admin/product-types:
+  /v1/admin/product-types:
     post:
       summary: Create a new product type
       description: Creates a product type along with its attributes and options.
@@ -64,7 +64,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  /admin/product-types/attributes:
+  /v1/admin/product-types/attributes:
     post:
       summary: Add attributes to an existing product type
       description: >
@@ -96,7 +96,7 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/InternalServerError"
-  /admin/product-types/not-allowed-combinations:
+  /v1/admin/product-types/not-allowed-combinations:
     post:
       summary: Add not allowed combinations to a product type
       description: >
@@ -132,7 +132,7 @@ paths:
           $ref: "#/components/responses/NotFound"
         "500":
           $ref: "#/components/responses/InternalServerError"
-  /admin/product-types/{productTypeId}:
+  /v1/admin/product-types/{productTypeId}:
     get:
       summary: Get product type details
       description: Returns detailed information about a specific product type, including its attributes, options, and not-allowed combinations.
@@ -167,7 +167,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-  /admin/products:
+  /v1/admin/products:
     post:
       summary: Create a new product
       description: Creates a product with images, product details, and customization options.
@@ -227,7 +227,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "500":
           $ref: "#/components/responses/InternalServerError"
-  /admin/products/{productId}:
+  /v1/admin/products/{productId}:
     get:
       summary: Get product details
       description: Retrieve detailed information about a product, including attributes, options, and not allowed combinations.
@@ -257,7 +257,7 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "500":
           $ref: "#/components/responses/InternalServerError"
-  /products/{productId}/available-options:
+  /v1/products/{productId}/available-options:
     get:
       summary: Get available options for a requested attribute
       description: Retrieves available attribute options for a given product while considering not-allowed combinations and stock availability.
