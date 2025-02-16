@@ -257,6 +257,60 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "500":
           $ref: "#/components/responses/InternalServerError"
+  /products/{productId}/available-options:
+    get:
+      summary: Get available options for a requested attribute
+      description: Retrieves available attribute options for a given product while considering not-allowed combinations and stock availability.
+      operationId: getAvailableOptions
+      tags:
+        - Product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          description: The UUID of the product for which available options are requested.
+          schema:
+            type: string
+            format: uuid
+        - name: requestedAttributeId
+          in: query
+          required: true
+          description: The attribute ID whose available options should be retrieved.
+          schema:
+            type: integer
+            format: int64
+        - name: selectedOptionIds
+          in: query
+          required: true
+          description: A comma-separated list of selected option IDs.
+          schema:
+            type: string
+            example: "2,6,9"
+      responses:
+        "200":
+          description: A list of available options for the requested attribute.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailableAttributeOptionsResponse"
+        "400":
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Product not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
@@ -703,6 +757,25 @@ components:
         message:
           type: string
           example: "Product created successfully"
+
+    AvailableAttributeOptionsResponse:
+      type: object
+      required:
+        - attributeId
+        - attributeName
+        - options
+      properties:
+        attributeId:
+          type: integer
+          format: int64
+          description: The ID of the requested attribute.
+        attributeName:
+          type: string
+          description: The name of the requested attribute.
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttributeOption"
 
     ErrorResponse:
       type: object

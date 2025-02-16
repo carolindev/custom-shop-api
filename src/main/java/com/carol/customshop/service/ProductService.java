@@ -457,4 +457,180 @@ public class ProductService {
         return ServletUriComponentsBuilder.fromCurrentContextPath().toUriString();
     }
 
+    @Transactional
+    public AvailableAttributeOptionsResponse getAvailableOptionsBySelection(
+            UUID productId, Long requestedAttributeId, List<Long> selectedOptionIds
+    ) {
+        // Validate Product Existence
+        Product product = getProductById(productId);
+
+        // Validate Requested Attribute Existence
+        ProductTypeAttribute requestedAttribute = productTypeService.getProductTypeAttributeById(requestedAttributeId);
+        List<ProductTypeAttributeOption> allOptions = requestedAttribute.getOptions();
+
+        // Validate Selected Options
+        validateSelectedOptions(selectedOptionIds, requestedAttributeId);
+
+        // Fetch Product-Specific Overrides
+        Set<Long> deactivatedAttributes = getDeactivatedAttributes(product);
+        Set<Long> deactivatedOptions = getDeactivatedOptions(product);
+        Set<Long> outOfStockOptions = getOutOfStockOptions(product);
+
+        // Fetch Not-Allowed Combinations
+        Set<Long> forbiddenOptions = new HashSet<>();
+
+        // Fetch general product-type-based not-allowed combinations
+        forbiddenOptions.addAll(getForbiddenOptionsFromCombinations(
+                product.getProductType(), selectedOptionIds, requestedAttributeId)
+        );
+
+        // Fetch product-specific not-allowed combinations
+        forbiddenOptions.addAll(getForbiddenOptionsFromProductCombinations(
+                product, selectedOptionIds, requestedAttributeId)
+        );
+
+        // Filter Allowed Options
+        List<AttributeOption> availableOptions = allOptions.stream()
+                .filter(option -> !deactivatedAttributes.contains(requestedAttributeId)) // Ensure attribute is active
+                .filter(option -> !deactivatedOptions.contains(option.getId())) // Ensure option is active
+                .filter(option -> !forbiddenOptions.contains(option.getId())) // Ensure option is allowed
+                .filter(option -> !outOfStockOptions.contains(option.getId())) // Ensure is not out of stock
+                .map(option -> {
+                            AttributeOption opt = new AttributeOption();
+                            opt.setId(option.getId());
+                            opt.setName(option.getName());
+                            return opt;
+                        }
+                )
+                .collect(Collectors.toList());
+
+        // Return Response DTO
+        return new AvailableAttributeOptionsResponse(
+                requestedAttribute.getId(),
+                requestedAttribute.getAttributeName(),
+                availableOptions
+        );
+    }
+
+    private void validateSelectedOptions(List<Long> selectedOptionIds, Long requestedAttributeId) {
+        Map<Long, Long> selectedAttributesMap = new HashMap<>();
+
+        for (Long optionId : selectedOptionIds) {
+            ProductTypeAttributeOption option = productTypeService.getProductTypeAttributeOptionById(optionId);
+            if (option == null) {
+                throw new IllegalArgumentException("Invalid option ID: " + optionId);
+            }
+
+            Long attributeId = option.getAttribute().getId();
+
+            // Ensure that each attribute has only one selected option
+            if (selectedAttributesMap.containsValue(attributeId)) {
+                throw new IllegalArgumentException("Multiple options selected for the same attribute: " + attributeId);
+            }
+
+            // Ensure no selected option belongs to the requested attribute
+            if (attributeId.equals(requestedAttributeId)) {
+                throw new IllegalArgumentException("Selected option belongs to the requested attribute: " + optionId);
+            }
+
+            selectedAttributesMap.put(optionId, attributeId);
+        }
+    }
+
+    private Product getProductById(UUID productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found with ID: " + productId));
+    }
+
+    private Set<Long> getDeactivatedAttributes(Product product) {
+        return productAttributeOverrideRepository.findByProductAndActiveFalse(product)
+                .stream()
+                .map(override -> override.getAttribute().getId())
+                .collect(Collectors.toSet());
+    }
+
+    private Set<Long> getDeactivatedOptions(Product product) {
+        return productOptionOverrideRepository.findByProductAndActiveFalse(product)
+                .stream()
+                .map(override -> override.getOption().getId())
+                .collect(Collectors.toSet());
+    }
+
+    private Set<Long> getOutOfStockOptions(Product product) {
+        return productOptionOverrideRepository.findByProductAndOutOfStockTrue(product)
+                .stream()
+                .map(override -> override.getOption().getId())
+                .collect(Collectors.toSet());
+    }
+
+    private Set<Long> getForbiddenOptionsFromCombinations(
+            ProductType productType, List<Long> selectedOptionIds, Long requestedAttributeId
+    ) {
+        Set<Long> forbiddenOptions = new HashSet<>();
+        List<NotAllowedCombination> combinations = productType.getNotAllowedCombinations();
+
+        for (NotAllowedCombination combination : combinations) {
+            List<NotAllowedCombinationElement> elements = combination.getOptions();
+
+            // Extract the set of options in the forbidden combination
+            Set<Long> forbiddenSet = elements.stream()
+                    .map(element -> element.getAttributeOption().getId())
+                    .collect(Collectors.toSet());
+
+            // Ensure the forbidden set contains an option for the requested attribute
+            Optional<Long> forbiddenOptionForRequestedAttribute = elements.stream()
+                    .filter(element -> element.getAttribute().getId().equals(requestedAttributeId))
+                    .map(element -> element.getAttributeOption().getId())
+                    .findFirst();
+
+            if (forbiddenOptionForRequestedAttribute.isPresent()) {
+                Long forbiddenOption = forbiddenOptionForRequestedAttribute.get();
+
+                // Check if selecting this option would complete a forbidden combination
+                Set<Long> selectedSet = new HashSet<>(selectedOptionIds);
+                selectedSet.add(forbiddenOption); // Simulate selecting this option
+
+                if (selectedSet.containsAll(forbiddenSet)) {
+                    forbiddenOptions.add(forbiddenOption);
+                }
+            }
+        }
+        return forbiddenOptions;
+    }
+
+
+    private Set<Long> getForbiddenOptionsFromProductCombinations(
+            Product product, List<Long> selectedOptionIds, Long requestedAttributeId) {
+
+        Set<Long> forbiddenOptions = new HashSet<>();
+        List<ProductNotAllowedCombination> combinations = productNotAllowedCombinationRepository.findByProduct(product);
+
+        for (ProductNotAllowedCombination combination : combinations) {
+            List<ProductNotAllowedCombinationElement> elements = combination.getOptions();
+
+            // Extract the set of options in the forbidden combination
+            Set<Long> forbiddenSet = elements.stream()
+                    .map(element -> element.getOption().getId())
+                    .collect(Collectors.toSet());
+
+            // Ensure the forbidden set contains an option for the requested attribute
+            Optional<Long> forbiddenOptionForRequestedAttribute = elements.stream()
+                    .filter(element -> element.getAttribute().getId().equals(requestedAttributeId))
+                    .map(element -> element.getOption().getId())
+                    .findFirst();
+
+            if (forbiddenOptionForRequestedAttribute.isPresent()) {
+                Long forbiddenOption = forbiddenOptionForRequestedAttribute.get();
+
+                // Check if selecting this option would complete a forbidden combination
+                Set<Long> selectedSet = new HashSet<>(selectedOptionIds);
+                selectedSet.add(forbiddenOption); // Simulate selecting this option
+
+                if (selectedSet.containsAll(forbiddenSet)) {
+                    forbiddenOptions.add(forbiddenOption);
+                }
+            }
+        }
+        return forbiddenOptions;
+    }
 }

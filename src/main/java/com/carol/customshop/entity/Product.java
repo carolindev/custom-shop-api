@@ -20,10 +20,16 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false, unique = true)
     private String sku;
+
     private String description;
+
     private Float price;
+
     private String mainPicture;
 
     @ElementCollection
