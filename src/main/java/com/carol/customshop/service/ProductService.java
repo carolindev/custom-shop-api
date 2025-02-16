@@ -541,7 +541,7 @@ public class ProductService {
         }
     }
 
-    private Product getProductById(UUID productId) {
+    public Product getProductById(UUID productId) {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found with ID: " + productId));
     }
@@ -731,5 +731,33 @@ public class ProductService {
         response.setTotalPages(productPage.getTotalPages());
         response.setLastPage(productPage.isLast());
         return response;
+    }
+
+    public ProductTypeAttributeOption getOptionById(Long optionId) {
+        return productTypeService.getProductTypeAttributeOptionById(optionId);
+    }
+
+    public Set<Long> getValidAttributeIdsForProduct(UUID productId) {
+        // Retrieve the product
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not found with ID: " + productId));
+
+        // Get all attributes from the product type
+        Set<Long> allAttributeIds = product.getProductType().getAttributes().stream()
+                .map(ProductTypeAttribute::getId)
+                .collect(Collectors.toSet());
+
+        // Get deactivated attributes from overrides
+        Set<Long> deactivatedAttributes = getDeactivatedAttributes(product);
+
+        // Remove deactivated attributes
+        allAttributeIds.removeAll(deactivatedAttributes);
+
+        return allAttributeIds;
+    }
+
+    public String getProductImage(UUID id) {
+        Product product = getProductById(id);
+        return product.getMainPicture() != null ? getBaseUrl() + product.getMainPicture() : null;
     }
 }

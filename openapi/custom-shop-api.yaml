@@ -427,6 +427,75 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /v1/cart/items:
+    post:
+      summary: Add an item to the cart
+      description: Adds a product with selected options to the user's cart.
+      tags:
+        - Cart
+      operationId: addCartItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCartItemRequest'
+      responses:
+        "201":
+          description: Item successfully added to cart.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartItemResponse'
+        "400":
+          description: Invalid request or product/options not available.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "404":
+          description: Product not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: Retrieve the list of items in the user's cart
+      description: Returns all cart items for a specific user, including product details and selected options.
+      operationId: getCartItems
+      tags:
+        - Cart
+      responses:
+        "200":
+          description: Successfully retrieved cart items.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartResponse"
+        "400":
+          description: Invalid request parameters.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: User not found or cart empty.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
@@ -1002,6 +1071,83 @@ components:
         mainPicture:
           type: string
           example: "https://yourserver.com/uploads/main_picture_550e8400-e29b-41d4-a716-446655440000.jpg"
+
+    AddCartItemRequest:
+      type: object
+      required:
+        - productId
+        - selectedOptions
+        - quantity
+      properties:
+        productId:
+          type: string
+          format: uuid
+          description: ID of the product to add to the cart.
+        selectedOptions:
+          type: array
+          description: List of selected attribute-option pairs.
+          items:
+            type: object
+            properties:
+              attributeId:
+                type: integer
+                format: int64
+                description: ID of the attribute.
+              optionId:
+                type: integer
+                format: int64
+                description: ID of the selected option for the attribute.
+        quantity:
+          type: integer
+          minimum: 1
+          description: The number of items to add.
+
+    CartItemResponse:
+      type: object
+      properties:
+        cartItemId:
+          type: string
+          format: uuid
+          description: Unique identifier for the cart item.
+        productId:
+          type: string
+          format: uuid
+          description: The product ID.
+        productName:
+          type: string
+          description: Name of the product.
+        productImage:
+          type: string
+          description: Main product image
+        selectedOptions:
+          type: array
+          description: List of selected options.
+          items:
+            type: object
+            properties:
+              attributeId:
+                type: integer
+                format: int64
+                description: ID of the attribute.
+              optionId:
+                type: integer
+                format: int64
+                description: ID of the selected option.
+        quantity:
+          type: integer
+          description: The quantity added to the cart.
+        label:
+          type: string
+          description: Human-readable label including selected options.
+
+    CartResponse:
+      type: object
+      properties:
+        cartItems:
+          type: array
+          description: List of items in the cart.
+          items:
+            $ref: "#/components/schemas/CartItemResponse"
 
     ErrorResponse:
       type: object

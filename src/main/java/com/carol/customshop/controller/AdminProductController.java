@@ -4,6 +4,7 @@ import com.carol.customshop.api.AdminProductApi;
 import com.carol.customshop.dto.*;
 import com.carol.customshop.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,7 +37,7 @@ public class AdminProductController implements AdminProductApi {
                 mainPicture, imageGallery, overrides, nACombinationsOverrides, productNotAllowedCombinations
         );
 
-        return ResponseEntity.status(201).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @Override

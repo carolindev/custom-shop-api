@@ -3,6 +3,7 @@ package com.carol.customshop.controller;
 import com.carol.customshop.api.AdminProductTypesApi;
 import com.carol.customshop.dto.*;
 import com.carol.customshop.service.ProductTypeService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,7 +27,7 @@ public class AdminProductTypeController implements AdminProductTypesApi {
                 .message("Product type created successfully")
                 .productTypeId(productTypeId);
 
-        return ResponseEntity.status(201).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @Override
