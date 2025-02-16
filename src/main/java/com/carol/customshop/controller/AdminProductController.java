@@ -38,6 +38,13 @@ public class AdminProductController implements AdminProductApi {
 
         return ResponseEntity.status(201).body(response);
     }
+
+    @Override
+    public ResponseEntity<AdminProductListResponse> getAdminProductList(Integer page, Integer size) {
+        AdminProductListResponse response = productService.getAdminProductList(page, size);
+        return ResponseEntity.ok(response);
+    }
+
     @Override
     public ResponseEntity<ProductDetailsResponse> getProductDetails(UUID productId) {
         ProductDetailsResponse productDetails = productService.getProductDetails(productId);

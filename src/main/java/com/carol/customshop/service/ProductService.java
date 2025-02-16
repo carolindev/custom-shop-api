@@ -4,6 +4,10 @@ import com.carol.customshop.dto.*;
 import com.carol.customshop.entity.*;
 import com.carol.customshop.repository.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -692,5 +696,36 @@ public class ProductService {
                     return at;
                 })
                 .collect(Collectors.toList());
+    }
+
+    public AdminProductListResponse getAdminProductList(Integer page, Integer size) {
+        // Convert 1-based input page to 0-based for Spring Data
+        int adjustedPage = (page != null && page > 0) ? page - 1 : 0;
+
+        Pageable pageable = PageRequest.of(adjustedPage, size, Sort.by("name").ascending());
+
+        Page<Product> productPage = productRepository.findAll(pageable);
+
+        List<ProductListItemResponse> productList = productPage.getContent().stream()
+                .map(product -> {
+                    ProductListItemResponse response = new ProductListItemResponse();
+                    response.setId(product.getId());
+                    response.setName(product.getName());
+                    response.setDescription(product.getDescription());
+                    response.setSku(product.getSku());
+                    response.setProductTypeName(product.getProductType().getName());
+                    response.setPrice(product.getPrice());
+                    return response;
+                })
+                .collect(Collectors.toList());
+
+        AdminProductListResponse response = new AdminProductListResponse();
+        response.setProducts(productList);
+        response.setCurrentPage(productPage.getNumber() + 1); // Convert back to 1-based
+        response.setPageSize(productPage.getSize());
+        response.setTotalItems((int) productPage.getTotalElements());
+        response.setTotalPages(productPage.getTotalPages());
+        response.setLastPage(productPage.isLast());
+        return response;
     }
 }
