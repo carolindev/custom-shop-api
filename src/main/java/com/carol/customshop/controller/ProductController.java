@@ -2,6 +2,7 @@ package com.carol.customshop.controller;
 
 import com.carol.customshop.api.ProductApi;
 import com.carol.customshop.dto.AvailableAttributeOptionsResponse;
+import com.carol.customshop.dto.ProductDetailsCustomerResponse;
 import com.carol.customshop.service.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,6 +38,12 @@ public class ProductController implements ProductApi {
         AvailableAttributeOptionsResponse response = productService.getAvailableOptionsBySelection(
                 productId, requestedAttributeId, selectedOptions);
 
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
+    public ResponseEntity<ProductDetailsCustomerResponse> getProductDetailsForCustomer(UUID productId) {
+        ProductDetailsCustomerResponse response = productService.getProductDetailsForCustomer(productId);
         return ResponseEntity.ok(response);
     }
 }

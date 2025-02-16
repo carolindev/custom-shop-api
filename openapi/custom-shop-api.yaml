@@ -311,6 +311,40 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  /v1/products/{productId}:
+    get:
+      summary: Get product details for customers
+      description: Retrieves product details including active and in-stock attributes and options for display in the customer-facing UI.
+      tags:
+        - Product
+      operationId: getProductDetailsForCustomer
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The UUID of the product to retrieve.
+      responses:
+        "200":
+          description: Successfully retrieved product details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductDetailsCustomerResponse"
+        "404":
+          description: Product not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 
 components:
   schemas:
@@ -776,6 +810,66 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AttributeOption"
+    ProductDetailsCustomerResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The unique identifier of the product.
+        name:
+          type: string
+          description: The name of the product.
+        sku:
+          type: string
+          description: The SKU (Stock Keeping Unit) of the product.
+        description:
+          type: string
+          description: A description of the product.
+        price:
+          type: number
+          format: float
+          description: The price of the product.
+        mainPicture:
+          type: string
+          description: URL of the main product picture.
+        imageGallery:
+          type: array
+          items:
+            type: string
+          description: List of URLs for the product's image gallery.
+        productAttributes:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttributeResponseCustomer"
+          description: List of active and in-stock product attributes.
+
+    AttributeResponseCustomer:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: The ID of the product attribute.
+        name:
+          type: string
+          description: The name of the product attribute.
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/AttributeOptionCustomer"
+          description: List of available options for the attribute.
+
+    AttributeOptionCustomer:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: The ID of the attribute option.
+        name:
+          type: string
+          description: The name of the attribute option.
 
     ErrorResponse:
       type: object

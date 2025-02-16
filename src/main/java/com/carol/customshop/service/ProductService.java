@@ -633,4 +633,64 @@ public class ProductService {
         }
         return forbiddenOptions;
     }
+
+    public ProductDetailsCustomerResponse getProductDetailsForCustomer(UUID productId) {
+        // Fetch the Product Entity
+        Product product = getProductById(productId);
+
+        // Build Response DTO
+        ProductDetailsCustomerResponse response = new ProductDetailsCustomerResponse();
+        response.setId(product.getId());
+        response.setName(product.getName());
+        response.setSku(product.getSku());
+        response.setDescription(product.getDescription());
+        response.setPrice(product.getPrice());
+
+        // Format Image URLs
+        response.setMainPicture(product.getMainPicture() != null ? getBaseUrl() + product.getMainPicture() : null);
+
+        if (product.getImageGallery() != null) {
+            List<String> imageUrls = product.getImageGallery().stream()
+                    .map(fileName -> getBaseUrl() + fileName)
+                    .collect(Collectors.toList());
+            response.setImageGallery(imageUrls);
+        }
+
+        // Retrieve Active and In-Stock Attributes & Options
+        List<AttributeResponseCustomer> attributes = getActiveAndInStockAttributes(product);
+        response.setProductAttributes(attributes);
+
+        return response;
+    }
+
+    private List<AttributeResponseCustomer> getActiveAndInStockAttributes(Product product) {
+        // Retrieve product-specific overrides
+        Set<Long> deactivatedAttributes = getDeactivatedAttributes(product);
+        Set<Long> deactivatedOptions = getDeactivatedOptions(product);
+        Set<Long> outOfStockOptions = getOutOfStockOptions(product);
+
+        return product.getProductType().getAttributes().stream()
+                // Exclude deactivated attributes
+                .filter(attribute -> !deactivatedAttributes.contains(attribute.getId()))
+                .map(attribute -> {
+                    List<AttributeOptionCustomer> validOptions = attribute.getOptions().stream()
+                            // Exclude deactivated options
+                            .filter(option -> !deactivatedOptions.contains(option.getId()))
+                            // Exclude out-of-stock options
+                            .filter(option -> !outOfStockOptions.contains(option.getId()))
+                            .map(option -> {
+                                AttributeOptionCustomer atOpt = new AttributeOptionCustomer();
+                                atOpt.setId(option.getId());
+                                atOpt.setName(option.getName());
+                                return atOpt;
+                            })
+                            .collect(Collectors.toList());
+                    AttributeResponseCustomer at = new AttributeResponseCustomer();
+                    at.setId(attribute.getId());
+                    at.setName(attribute.getAttributeName());
+                    at.setOptions(validOptions);
+                    return at;
+                })
+                .collect(Collectors.toList());
+    }
 }
