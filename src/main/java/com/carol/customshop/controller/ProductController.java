@@ -3,6 +3,7 @@ package com.carol.customshop.controller;
 import com.carol.customshop.api.ProductApi;
 import com.carol.customshop.dto.AvailableAttributeOptionsResponse;
 import com.carol.customshop.dto.ProductDetailsCustomerResponse;
+import com.carol.customshop.dto.ProductListResponse;
 import com.carol.customshop.service.ProductService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -44,6 +45,12 @@ public class ProductController implements ProductApi {
     @Override
     public ResponseEntity<ProductDetailsCustomerResponse> getProductDetailsForCustomer(UUID productId) {
         ProductDetailsCustomerResponse response = productService.getProductDetailsForCustomer(productId);
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
+    public ResponseEntity<ProductListResponse> getProductList(Integer page, Integer size) {
+        ProductListResponse response = productService.getProductList(page, size);
         return ResponseEntity.ok(response);
     }
 }

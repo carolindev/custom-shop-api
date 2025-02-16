@@ -698,7 +698,7 @@ public class ProductService {
                 .collect(Collectors.toList());
     }
 
-    public AdminProductListResponse getAdminProductList(Integer page, Integer size) {
+    public ProductListResponse getProductList(Integer page, Integer size) {
         // Convert 1-based input page to 0-based for Spring Data
         int adjustedPage = (page != null && page > 0) ? page - 1 : 0;
 
@@ -715,11 +715,15 @@ public class ProductService {
                     response.setSku(product.getSku());
                     response.setProductTypeName(product.getProductType().getName());
                     response.setPrice(product.getPrice());
+                    response.setMainPicture(product.getMainPicture() != null ?
+                            getBaseUrl() + product.getMainPicture()
+                            :
+                            null);
                     return response;
                 })
                 .collect(Collectors.toList());
 
-        AdminProductListResponse response = new AdminProductListResponse();
+        ProductListResponse response = new ProductListResponse();
         response.setProducts(productList);
         response.setCurrentPage(productPage.getNumber() + 1); // Convert back to 1-based
         response.setPageSize(productPage.getSize());
