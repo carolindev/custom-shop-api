@@ -8,6 +8,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 @Slf4j
@@ -45,5 +46,12 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse();
         errorResponse.setError(message);
         return ResponseEntity.status(status).body(errorResponse);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<String> handleMaxSizeException(MaxUploadSizeExceededException ex) {
+        return ResponseEntity
+                .status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body("File size exceeds the maximum limit allowed.");
     }
 }

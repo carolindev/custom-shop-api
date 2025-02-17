@@ -718,7 +718,7 @@ components:
           description: List of attributes associated with the product type.
           items:
             $ref: "#/components/schemas/ProductAttributeResponse"
-        not_allowed_combinations:
+        notAllowedCombinations:
           type: array
           description: List of not-allowed combinations for this product type.
           items:
@@ -758,7 +758,7 @@ components:
     NotAllowedCombinationR:
       type: object
       properties:
-        combination_id:
+        combinationId:
           type: integer
           format: int64
           description: Unique identifier of the not-allowed combination.
